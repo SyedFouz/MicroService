@@ -1,6 +1,7 @@
 package com.softalchemy.accounts.controller;
 
 import com.softalchemy.accounts.constants.AccountsConstants;
+import com.softalchemy.accounts.dto.AccountsContactInfoDto;
 import com.softalchemy.accounts.dto.CustomerDto;
 import com.softalchemy.accounts.dto.ErrorResponseDto;
 import com.softalchemy.accounts.dto.ResponseDto;
@@ -13,7 +14,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
-import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -33,11 +36,21 @@ import org.springframework.web.bind.annotation.RestController;
 )
 @RestController
 @RequestMapping(path = "/api", produces = {MediaType.APPLICATION_JSON_VALUE})
-@AllArgsConstructor
 @Validated
 public class AccountsController {
 
-  private IAccountsService iAccountsService;
+  private final IAccountsService iAccountsService;
+  @Value("${build.version}")
+  private String buildVersion;
+  @Autowired
+  private Environment environment;
+  @Autowired
+  private AccountsContactInfoDto accountsContactInfoDto;
+
+  @Autowired
+  public AccountsController(IAccountsService iAccountsService) {
+    this.iAccountsService = iAccountsService;
+  }
 
   @Operation(
       summary = "Create Account REST API",
@@ -168,5 +181,36 @@ public class AccountsController {
     }
   }
 
+  @Operation(summary = "get build info", description = "API to get build info")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Get build info"),
+      @ApiResponse(responseCode = "500", description = "Error getting build info", content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
+  })
+  @GetMapping("/build-info")
+  public ResponseEntity<String> getBuildInfo() {
+    return ResponseEntity.status(HttpStatus.OK).body(buildVersion);
+  }
 
+  @Operation(summary = "get build info", description = "API to get build info")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Get build info"),
+      @ApiResponse(responseCode = "500", description = "Error getting build info", content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
+  })
+  @GetMapping("/java-version")
+  public ResponseEntity<String> getJavaHomeInfo() {
+    return ResponseEntity.status(HttpStatus.OK).body(environment.getProperty("JAVA_HOME"));
+
+  }
+
+  @Operation(summary = "get build info", description = "API to get build info")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Get build info"),
+      @ApiResponse(responseCode = "500", description = "Error getting build info", content = @Content(schema = @Schema(implementation = ErrorResponseDto.class)))
+  })
+  @GetMapping("/contact-info")
+  public ResponseEntity<AccountsContactInfoDto> getContactInfo() {
+
+    return ResponseEntity.status(HttpStatus.OK).body(accountsContactInfoDto);
+
+  }
 }
